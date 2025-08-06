@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Embryology Quiz</title>
+    <style>
+        /* General Body and Layout */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+            padding: 20px 40px;
+        }
+
+        /* Header Styling */
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .header img {
+            width: 100%; /* Adjust size to fit the container */
+            max-width: 400px; /* Optional: set a max width */
+            height: auto;
+            margin-bottom: 10px;
+        }
+        .header h1 {
+            color: #004d99;
+            margin: 0;
+            font-size: 2em;
+        }
+        .header p {
+            color: #555;
+            margin: 5px 0 0;
+            font-size: 1.1em;
+        }
+        .header .batch {
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Quiz Styling */
+        .quiz-container {
+            display: none;
+        }
+        .quiz-container.active {
+            display: block;
+        }
+        .question-card {
+            margin-bottom: 20px;
+        }
+        .question-card h2 {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .options-list {
+            list-style: none;
+            padding: 0;
+        }
+        .options-list li {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .options-list li:hover {
+            background-color: #f0f0f0;
+        }
+        .options-list li.correct {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .options-list li.incorrect {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        /* Feedback and Buttons */
+        .feedback {
+            margin-top: 15px;
+            font-style: italic;
+            color: #555;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-left: 5px solid #004d99;
+            display: none;
+        }
+        .quiz-controls {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        .quiz-controls button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        .quiz-controls button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        /* Results Styling */
+        .results-container {
+            text-align: center;
+            display: none;
+            margin-top: 40px;
+        }
+        .results-container h2 {
+            color: #28a745;
+            font-size: 2.5em;
+        }
+        .results-container p {
+            font-size: 1.2em;
+            color: #333;
+        }
+        .results-container button {
+            margin-top: 20px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <img src="logo.JPG" alt="UMST Logo">
+            <h1>University of Medical Sciences & Technology</h1>
+            <p>Faculty of Medicine</p>
+            <p class="batch">Batch 30 & 28 Abha Center</p>
+        </div>
+
+        <div id="quiz-start-screen" class="quiz-container active">
+            <h2>Welcome to the Embryology Quiz!</h2>
+            <p>This quiz aims to reinforce key embryology concepts and support effective review and self-assessment. Good luck!</p>
+            <button id="start-quiz-btn">Start Quiz</button>
+        </div>
+
+        <div id="quiz-questions-screen" class="quiz-container">
+            <div id="question-card" class="question-card">
+                <h2 id="question-text"></h2>
+                <ul id="options-list" class="options-list"></ul>
+            </div>
+            <div id="feedback" class="feedback"></div>
+            <div class="quiz-controls">
+                <button id="next-btn" disabled>Next</button>
+            </div>
+        </div>
+
+        <div id="quiz-results-screen" class="results-container">
+            <h2>Quiz Complete!</h2>
+            <p>Your score is: <span id="score-display">0</span> out of 40</p>
+            <button id="restart-btn">Restart Quiz</button>
+        </div>
+
+    </div>
+
+    <script>
+        // Quiz Data: 40 Questions for General Embryology
+        const questions = [
+            // Question 1 (Day 0)
+            {
+                question: "What is the process called when the sperm and oocyte combine to form a zygote?",
+                options: ["A) Gastrulation", "B) Fertilization", "C) Implantation", "D) Cleavage"],
+                answer: "B",
+                explanation: "Fertilization is the fusion of the sperm and oocyte, resulting in the formation of a diploid zygote. This marks the beginning of human development."
+            },
+            // Question 2 (Week 1)
+            {
+                question: "The process of rapid cell division without an increase in overall size of the embryo, starting after fertilization, is known as:",
+                options: ["A) Implantation", "B) Gastrulation", "C) Cleavage", "D) Neurulation"],
+                answer: "C",
+                explanation: "Cleavage is a series of mitotic divisions that the zygote undergoes, producing a ball of smaller cells called blastomeres. The size of the embryo remains constant during this phase."
+            },
+            // Question 3 (Week 1)
+            {
+                question: "By day 4 of development, the morula enters the uterine cavity and a fluid-filled cavity forms inside it. The structure is now called a:",
+                options: ["A) Zygote", "B) Blastocyst", "C) Gastrula", "D) Embryoblast"],
+                answer: "B",
+                explanation: "Around day 4, the morula develops a fluid-filled cavity (the blastocyst cavity), transforming it into a blastocyst. The cells differentiate into the inner cell mass (embryoblast) and the outer cell layer (trophoblast)."
+            },
+            // Question 4 (Week 1)
+            {
+                question: "The inner cell mass of the blastocyst gives rise to which part of the embryo?",
+                options: ["A) The placenta", "B) The chorion", "C) The embryo proper", "D) The yolk sac"],
+                answer: "C",
+                explanation: "The inner cell mass (embryoblast) is the source of all the cells that will form the embryo itself. The outer cell layer (trophoblast) will contribute to the placenta."
+            },
+            // Question 5 (Week 2)
+            {
+                question: "Implantation of the blastocyst into the uterine wall typically begins around what day?",
+                options: ["A) Day 1-2", "B) Day 6-7", "C) Day 10-11", "D) Day 14-15"],
+                answer: "B",
+                explanation: "Implantation is the process where the blastocyst attaches to and embeds in the endometrium. This typically starts around day 6 or 7 of development."
+            },
+            // Question 6 (Week 2)
+            {
+                question: "During the second week, the embryoblast differentiates into a bilaminar germ disc. The two layers are:",
+                options: ["A) Ectoderm and endoderm", "B) Epiblast and hypoblast", "C) Trophoblast and amnion", "D) Mesoderm and ectoderm"],
+                answer: "B",
+                explanation: "The bilaminar germ disc consists of the epiblast and the hypoblast. The epiblast forms the floor of the amniotic cavity, and the hypoblast forms the roof of the primary yolk sac."
+            },
+            // Question 7 (Week 3)
+            {
+                question: "The process of gastrulation, which forms the three primary germ layers, is initiated by the formation of the:",
+                options: ["A) Neural plate", "B) Primitive streak", "C) Primitive node", "D) Notochord"],
+                answer: "B",
+                explanation: "Gastrulation is a key event in the third week. It begins with the formation of the primitive streak on the surface of the epiblast, which then gives rise to the ectoderm, mesoderm, and endoderm."
+            },
+            // Question 8 (Week 3)
+            {
+                question: "The ectoderm gives rise to which of the following structures?",
+                options: ["A) The lining of the gut", "B) The heart and blood vessels", "C) The skin and nervous system", "D) The skeleton and muscles"],
+                answer: "C",
+                explanation: "The ectoderm is the outermost germ layer. It forms the epidermis of the skin, hair, nails, and the entire nervous system (brain and spinal cord)."
+            },
+            // Question 9 (Week 3)
+            {
+                question: "The mesoderm gives rise to which of the following structures?",
+                options: ["A) The brain and spinal cord", "B) The liver and pancreas", "C) The muscles, bones, and circulatory system", "D) The lining of the respiratory tract"],
+                answer: "C",
+                explanation: "The mesoderm is the middle germ layer. It forms the connective tissues, muscles, bone, cartilage, kidneys, and the circulatory system (heart and blood vessels)."
+            },
+            // Question 10 (Week 3)
+            {
+                question: "The endoderm gives rise to which of the following structures?",
+                options: ["A) The brain and spinal cord", "B) The epidermis", "C) The skeletal muscles", "D) The lining of the gastrointestinal and respiratory tracts"],
+                answer: "D",
+                explanation: "The endoderm is the innermost germ layer. It forms the epithelial lining of the digestive tract, respiratory tract, and various organs like the liver, pancreas, and urinary bladder."
+            },
+            // Question 11 (Week 4)
+            {
+                question: "During the fourth week, the flat trilaminar disc folds into a more cylindrical, three-dimensional embryo. This process is called:",
+                options: ["A) Neurulation", "B) Gastrulation", "C) Organogenesis", "D) Embryonic folding"],
+                answer: "D",
+                explanation: "Embryonic folding is a critical event that transforms the flat embryonic disc into a recognizable human form. It involves folding along both the head-tail axis and the lateral axis."
+            },
+            // Question 12 (Week 4)
+            {
+                question: "The process of neurulation, which forms the neural tube, is initiated by the thickening of the ectoderm to form the:",
+                options: ["A) Neural plate", "B) Notochord", "C) Primitive streak", "D) Neural node"],
+                answer: "A",
+                explanation: "Neurulation is the formation of the neural tube, which will become the central nervous system. It begins with the thickening of the ectoderm above the notochord to form the neural plate."
+            },
+            // Question 13 (Week 4)
+            {
+                question: "The neural crest cells are a population of cells that detach from the neural tube and migrate throughout the embryo. They give rise to which of the following?",
+                options: ["A) The central nervous system", "B) The heart and blood vessels", "C) The peripheral nervous system and melanocytes", "D) The liver and pancreas"],
+                answer: "C",
+                explanation: "Neural crest cells are often called the 'fourth germ layer' because they are highly migratory and give rise to a wide variety of cell types, including most of the peripheral nervous system and pigment-producing melanocytes."
+            },
+            // Question 14 (Week 4)
+            {
+                question: "Around the end of the fourth week, the heart starts to beat. At this stage, the heart is a single tubular structure formed from:",
+                options: ["A) Epiblast", "B) Cardiogenic mesoderm", "C) Endoderm", "D) Neural crest cells"],
+                answer: "B",
+                explanation: "The heart originates from the cardiogenic mesoderm. It begins as a pair of tubes that fuse to form a single heart tube, which starts beating around day 22-23."
+            },
+            // Question 15 (Replaced with placental abnormality question)
+            {
+                question: "A condition where the placenta partially or completely covers the internal cervical os, leading to bleeding late in pregnancy, is known as:",
+                options: ["A) Placenta accreta", "B) Placenta previa", "C) Abruptio placentae", "D) Villi-less placenta"],
+                answer: "B",
+                explanation: "Placenta previa is the abnormal implantation of the placenta in the lower uterine segment, where it lies over or close to the cervix. It is a major cause of painless vaginal bleeding in the third trimester."
+            },
+            // Question 16 (Week 5)
+            {
+                question: "What is a key developmental feature of the embryo during the fifth week?",
+                options: ["A) Formation of the blastocyst", "B) Rapid growth of the head and formation of the limb buds", "C) Onset of gastrulation", "D) Completion of neurulation"],
+                answer: "B",
+                explanation: "During the fifth week, the head grows rapidly, and the upper and lower limb buds become clearly visible as small swellings on the lateral body wall."
+            },
+            // Question 17 (Replaced with placental abnormality question)
+            {
+                question: "In a condition called Placenta accreta, the placenta's chorionic villi attach directly to which layer of the uterine wall?",
+                options: ["A) Myometrium", "B) Endometrium", "C) Perimetrium", "D) Cervical canal"],
+                answer: "A",
+                explanation: "Placenta accreta occurs when the chorionic villi invade the myometrium (the muscular layer of the uterine wall) instead of attaching to the endometrium. This can lead to severe complications during childbirth."
+            },
+            // Question 18 (Week 6)
+            {
+                question: "What is the name of the process by which the embryo's developing organs begin to take shape from the three primary germ layers?",
+                options: ["A) Fertilization", "B) Cleavage", "C) Gastrulation", "D) Organogenesis"],
+                answer: "D",
+                explanation: "Organogenesis is the process by which the three primary germ layers (ectoderm, mesoderm, and endoderm) differentiate and interact to form the various organs of the body. It occurs primarily from weeks 3 to 8."
+            },
+            // Question 19 (Week 7)
+            {
+                question: "During the seventh week, the umbilical hernia is a normal physiological event where the rapidly growing intestines temporarily protrude into the umbilical cord. This is due to:",
+                options: ["A) Lack of space in the abdominal cavity", "B) A genetic defect", "C) A placental abnormality", "D) Improper embryonic folding"],
+                answer: "A",
+                explanation: "The abdominal cavity is too small to contain the rapidly growing intestines during the seventh and eighth weeks. The intestines temporarily enter the umbilical cord, a process that is a normal part of development."
+            },
+            // Question 20 (Week 7)
+            {
+                question: "Separation of the developing digits (fingers and toes) occurs during the seventh and eighth weeks through a process known as:",
+                options: ["A) Apoptosis (programmed cell death)", "B) Mitosis", "C) Meiosis", "D) Fertilization"],
+                answer: "A",
+                explanation: "The webbing between the developing digits is removed through apoptosis, or programmed cell death. This ensures the formation of separate fingers and toes."
+            },
+            // Question 21 (Week 8)
+            {
+                question: "By the end of the eighth week, the embryo is often called a fetus. What is a key characteristic of this transition?",
+                options: ["A) The embryo is only a few cells large", "B) The major organ systems have begun to form", "C) The placenta is fully developed", "D) The heart has not yet started to beat"],
+                answer: "B",
+                explanation: "The embryonic period (weeks 3-8) is characterized by the formation of all major organ systems (organogenesis). By the end of this period, the embryo has a distinctly human appearance, and the major body structures are in place, marking the end of the most critical period of development."
+            },
+            // Question 22 (Week 8)
+            {
+                question: "The fetal period begins at which week of development?",
+                options: ["A) Week 4", "B) Week 6", "C) Week 8", "D) Week 9"],
+                answer: "D",
+                explanation: "The fetal period officially begins at the start of the ninth week. This period is primarily one of growth and maturation of the organs and tissues formed during the embryonic period."
+            },
+            // Question 23 (Day 0-3)
+            {
+                question: "What is the name of the fluid that fills the space within the developing blastocyst?",
+                options: ["A) Amniotic fluid", "B) Blastocoel", "C) Yolk sac fluid", "D) Coelomic fluid"],
+                answer: "B",
+                explanation: "The blastocoel is the fluid-filled cavity that forms within the morula, transforming it into a blastocyst."
+            },
+            // Question 24 (Week 2)
+            {
+                question: "The trophoblast, the outer layer of the blastocyst, differentiates into two layers during implantation. They are the:",
+                options: ["A) Epiblast and hypoblast", "B) Cytotrophoblast and syncytiotrophoblast", "C) Mesoderm and ectoderm", "D) Amnion and chorion"],
+                answer: "B",
+                explanation: "The trophoblast differentiates into the inner cytotrophoblast and the outer syncytiotrophoblast. The syncytiotrophoblast is responsible for invading the uterine wall and forming the placental connection."
+            },
+            // Question 25 (Week 3)
+            {
+                question: "Which primary germ layer gives rise to the notochord?",
+                options: ["A) Ectoderm", "B) Mesoderm", "C) Endoderm", "D) Neural crest"],
+                answer: "B",
+                explanation: "The notochord, a rod-like structure that provides a primitive axis for the embryo, develops from the mesoderm (specifically, the prechordal plate and primitive node)."
+            },
+            // Question 26 (Week 3)
+            {
+                question: "The intraembryonic coelom, which eventually forms the body cavities, appears within the:",
+                options: ["A) Endoderm", "B) Ectoderm", "C) Intraembryonic mesoderm", "D) Trophoblast"],
+                answer: "C",
+                explanation: "The intraembryonic coelom is a space that forms within the intraembryonic mesoderm, splitting it into two layers. This cavity will become the pericardial, pleural, and peritoneal cavities."
+            },
+            // Question 27 (Week 4)
+            {
+                question: "The primitive gut is formed from which germ layer during embryonic folding?",
+                options: ["A) Ectoderm", "B) Mesoderm", "C) Endoderm", "D) Trophoblast"],
+                answer: "C",
+                explanation: "During embryonic folding, the endoderm is incorporated into the embryo to form the primitive gut, which is the precursor to the gastrointestinal tract."
+            },
+            // Question 28 (Week 4)
+            {
+                question: "The developing somites, which form from the paraxial mesoderm, will differentiate into which of the following?",
+                options: ["A) The heart and blood vessels", "B) The skin, muscles, and vertebrae", "C) The brain and spinal cord", "D) The liver and pancreas"],
+                answer: "B",
+                explanation: "Somites are blocks of mesoderm that form along the neural tube. They give rise to the sclerotome (vertebrae), myotome (skeletal muscle), and dermatome (dermis of the skin)."
+            },
+            // Question 29 (Week 5-6)
+            {
+                question: "What is the name of the temporary structure that connects the yolk sac to the midgut, which is later obliterated?",
+                options: ["A) The umbilical cord", "B) The notochord", "C) The vitelline duct", "D) The allantois"],
+                answer: "C",
+                explanation: "The vitelline duct, also known as the omphalomesenteric duct, is a narrow tube that connects the yolk sac to the midgut. It normally obliterates during the 6th week, but its persistence can lead to a condition called Meckel's diverticulum."
+            },
+            // Question 30 (Week 7)
+            {
+                question: "The development of the kidneys begins with the formation of a transient, non-functional kidney called the:",
+                options: ["A) Metanephros", "B) Mesonephros", "C) Pronephros", "D) Allantois"],
+                answer: "C",
+                explanation: "The pronephros is the first and most rudimentary of the three successive kidney systems to develop. It is non-functional and degenerates, replaced by the mesonephros and then the permanent metanephros."
+            },
+            // Question 31 (Week 8)
+            {
+                question: "By the end of the eighth week, the face of the embryo has a more human-like appearance due to the fusion of which structures?",
+                options: ["A) The limb buds", "B) The pharyngeal arches", "C) The somites", "D) The chorionic villi"],
+                answer: "B",
+                explanation: "The pharyngeal arches and their surrounding tissues fuse to form the structures of the face, including the maxilla, mandible, and parts of the tongue and ear."
+            },
+            // Question 32 (Week 8)
+            {
+                question: "The final and permanent kidney, the metanephros, becomes functional during which week?",
+                options: ["A) Week 4", "B) Week 6", "C) Week 8", "D) After birth"],
+                answer: "D",
+                explanation: "The permanent kidney, the metanephros, forms during the late embryonic period but does not become fully functional until after birth. Until then, the placenta handles waste removal."
+            },
+            // Question 33 (Week 9+)
+            {
+                question: "Which of the following is a key feature of the fetal period (from week 9 onwards)?",
+                options: ["A) Formation of the primary germ layers", "B) Major organogenesis", "C) Rapid growth and maturation of organ systems", "D) Embryonic folding"],
+                answer: "C",
+                explanation: "The fetal period is primarily a period of growth, where the organs and systems formed during the embryonic period grow in size and mature in function. The risk of major congenital malformations from teratogens is generally lower during this period."
+            },
+            // Question 34 (Clinical)
+            {
+                question: "Failure of the neural tube to close during the fourth week of development can lead to which major congenital malformation?",
+                options: ["A) Cleft palate", "B) Spina bifida", "C) Omphalocele", "D) Situs inversus"],
+                answer: "B",
+                explanation: "Spina bifida is a type of neural tube defect where the neural tube fails to close completely. This can result in various degrees of spinal cord and vertebral arch defects."
+            },
+            // Question 35 (Clinical)
+            {
+                question: "A doctor diagnoses a patient with a persistent vitelline duct. This is a congenital anomaly resulting from the failure of which embryological structure to degenerate?",
+                options: ["A) The allantois", "B) The notochord", "C) The connecting stalk", "D) The omphalomesenteric duct"],
+                answer: "D",
+                explanation: "The omphalomesenteric duct is another name for the vitelline duct. Its failure to degenerate can lead to various anomalies, most commonly a Meckel's diverticulum."
+            },
+            // Question 36 (Week 2)
+            {
+                question: "The chorionic sac and chorionic villi, which form the fetal part of the placenta, are derived from which blastocyst layer?",
+                options: ["A) Epiblast", "B) Hypoblast", "C) Trophoblast", "D) Endoderm"],
+                answer: "C",
+                explanation: "The trophoblast, the outer layer of the blastocyst, is the origin of the chorion and the chorionic villi, which are essential for forming the placenta and exchanging nutrients and gases with the maternal blood."
+            },
+            // Question 37 (Week 3)
+            {
+                question: "The lateral plate mesoderm splits to form the intraembryonic coelom. The two layers it splits into are:",
+                options: ["A) Ectoderm and Endoderm", "B) Somatic and Splanchnic mesoderm", "C) Neural plate and notochord", "D) Somites and intermediate mesoderm"],
+                answer: "B",
+                explanation: "The lateral plate mesoderm splits into the somatic (parietal) layer, which lines the body wall, and the splanchnic (visceral) layer, which surrounds the developing gut tube."
+            },
+            // Question 38 (Week 4)
+            {
+                question: "What is the primary function of the notochord?",
+                options: ["A) Forming the brain", "B) Inducing the overlying ectoderm to form the neural plate", "C) Forming the heart", "D) Producing blood cells"],
+                answer: "B",
+                explanation: "The notochord's most critical function is its inductive role. It signals to the ectoderm above it, causing it to thicken and form the neural plate, which is the first step of neurulation."
+            },
+            // Question 39 (Week 5)
+            {
+                question: "The separation of the primordial heart into the right and left sides begins with the formation of the:",
+                options: ["A) Primitive streak", "B) Septum primum", "C) Notochord", "D) Neural tube"],
+                answer: "B",
+                explanation: "Cardiac septation begins with the formation of the septum primum, a crescent-shaped membrane that grows from the roof of the common atrium to divide it into right and left sides."
+            },
+            // Question 40 (Replaced with placental abnormality question)
+            {
+                question: "The maternal component of the placenta, derived from the uterine endometrium, is known as the:",
+                options: ["A) Decidua basalis", "B) Chorion frondosum", "C) Amniotic sac", "D) Syncytiotrophoblast"],
+                answer: "A",
+                explanation: "The placenta has both fetal and maternal components. The fetal component is the chorion frondosum, and the maternal component is the decidua basalis, a specialized part of the uterine endometrium."
+            }
+        ];
+
+        // Global variables
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        // Get DOM elements
+        const startScreen = document.getElementById('quiz-start-screen');
+        const questionScreen = document.getElementById('quiz-questions-screen');
+        const resultsScreen = document.getElementById('quiz-results-screen');
+        const startButton = document.getElementById('start-quiz-btn');
+        const nextButton = document.getElementById('next-btn');
+        const restartButton = document.getElementById('restart-btn');
+        const questionText = document.getElementById('question-text');
+        const optionsList = document.getElementById('options-list');
+        const feedbackElement = document.getElementById('feedback');
+        const scoreDisplay = document.getElementById('score-display');
+
+        // Event listeners
+        startButton.addEventListener('click', startQuiz);
+        nextButton.addEventListener('click', nextQuestion);
+        restartButton.addEventListener('click', restartQuiz);
+
+        // Functions
+        function startQuiz() {
+            startScreen.classList.remove('active');
+            questionScreen.classList.add('active');
+            currentQuestionIndex = 0;
+            score = 0;
+            showQuestion();
+        }
+
+        function showQuestion() {
+            answered = false;
+            const question = questions[currentQuestionIndex];
+            questionText.textContent = `Q${currentQuestionIndex + 1}: ${question.question}`;
+            optionsList.innerHTML = ''; // Clear previous options
+            feedbackElement.style.display = 'none';
+            nextButton.disabled = true;
+
+            question.options.forEach(option => {
+                const li = document.createElement('li');
+                li.textContent = option;
+                li.addEventListener('click', () => selectOption(li, option, question.answer, question.explanation));
+                optionsList.appendChild(li);
+            });
+        }
+
+        function selectOption(selectedLi, selectedOption, correctAnswer, explanation) {
+            if (answered) return;
+            answered = true;
+            nextButton.disabled = false;
+
+            const selectedAnswer = selectedOption.charAt(0);
+            const allOptions = optionsList.querySelectorAll('li');
+
+            allOptions.forEach(li => {
+                const optionChar = li.textContent.charAt(0);
+                if (optionChar === correctAnswer) {
+                    li.classList.add('correct');
+                }
+                if (li === selectedLi && selectedAnswer !== correctAnswer) {
+                    li.classList.add('incorrect');
+                }
+            });
+
+            if (selectedAnswer === correctAnswer) {
+                score++;
+            }
+
+            feedbackElement.textContent = explanation;
+            feedbackElement.style.display = 'block';
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            questionScreen.classList.remove('active');
+            resultsScreen.classList.add('active');
+            scoreDisplay.textContent = score;
+        }
+
+        function restartQuiz() {
+            resultsScreen.classList.remove('active');
+            startScreen.classList.add('active');
+        }
+    </script>
+</body>
+</html>
